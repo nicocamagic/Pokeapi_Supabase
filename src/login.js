@@ -15,30 +15,32 @@ export function mostrarLogin() {
     </div>
   `;
 
+  // Manejo del formulario de login
   document.querySelector("#login-form").addEventListener("submit", handleLogin);
+
+  // Navegar al registro
   document.querySelector("#btn-registro").addEventListener("click", mostrarRegistro);
-
-  // ir a registro
-  document.getElementById('btn-registro').addEventListener('click', () => {
-    mostrarRegistro();
-  });
-
-
 }
-
 
 async function handleLogin(event) {
   event.preventDefault();
-  const email = document.querySelector("#email").value;
-  const password = document.querySelector("#password").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const email = document.querySelector("#email").value.trim();
+  const password = document.querySelector("#password").value.trim();
 
-  if (error) {
-    alert("Error al iniciar sesión: " + error.message);
-    return;
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw new Error("Error al iniciar sesión: " + error.message);
+    }
+
+    console.log("Login exitoso", data.user);
+    location.reload(); // Recargar la página tras el login exitoso
+  } catch (error) {
+    alert(error.message);
   }
-
-  console.log("Login exitoso", data.user);
-  location.reload();
 }
