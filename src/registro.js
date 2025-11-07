@@ -24,8 +24,10 @@ export function mostrarRegistro() {
     mostrarLogin();
   });
 
+  // Manejo del formulario de registro
   document.getElementById('registro-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const form = e.target;
     const nombre = form.nombre.value.trim();
     const correo = form.correo.value.trim();
@@ -33,41 +35,45 @@ export function mostrarRegistro() {
     const fechaNacimiento = form.fechaNacimiento.value;
     const telefono = form.telefono.value.trim();
     const errorElement = document.getElementById('error');
+
     errorElement.textContent = '';
 
-    // 1. Crear usuario en Auth
-    const { data, error: errorAuth } = await supabase.auth.signUp({
-      email: correo,
-      password: password,
-    });
+    try {
+      // 1. Crear usuario en Auth
+      const { data, error: errorAuth } = await supabase.auth.signUp({
+        email: correo,
+        password: password,
+      });
 
-    if (errorAuth) {
-      errorElement.textContent = errorAuth.message;
-      return;
-    }
+      if (errorAuth) {
+        throw new Error(errorAuth.message);
+      }
 
-    const uid = data.user?.id;
-    if (!uid) {
-      errorElement.textContent = "Error obteniendo ID del usuario.";
-      return;
-    }
+      const uid = data.user?.id;
+      if (!uid) {
+        throw new Error("Error obteniendo ID del usuario.");
+      }
 
-    // 2. Insertar datos adicionales en tabla
-    const { error: errorInsert } = await supabase.from('usuario').insert([
-      {
-        id: uid,
-        nombre,
-        correo,
-        fecha_nacimiento: fechaNacimiento,
-        telefono,
-        roll: 'usuario',
-      },
-    ]);
+      // 2. Insertar datos adicionales en tabla
+      const { error: errorInsert } = await supabase.from('usuario').insert([
+        {
+          id: uid,
+          nombre,
+          correo,
+          fecha_nacimiento: fechaNacimiento,
+          telefono,
+          roll: 'usuario',
+        },
+      ]);
 
-    if (errorInsert) {
-      errorElement.textContent = 'Usuario creado pero error en base de datos: ' + errorInsert.message;
-    } else {
-      mostrarLogin(); // Redirige al login después del registro exitoso
+      if (errorInsert) {
+        throw new Error('Usuario creado pero error en base de datos: ' + errorInsert.message);
+      }
+
+      // Redirige al login después del registro exitoso
+      mostrarLogin();
+    } catch (error) {
+      errorElement.textContent = error.message;
     }
   });
 }
